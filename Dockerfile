@@ -2,6 +2,8 @@
 FROM ubuntu:focal
 LABEL maintainer="Coding <code@ongoing.today>"
 
+ARG TARGETARCH
+
 ENV DEBIAN_FRONTEND noninteractive
 # Tracking latest and not "-lts"
 ENV ZEEK_LTS="" 
@@ -14,7 +16,8 @@ ENV PATH "${ZEEK_DIR}/bin:${SPICY_DIR}/bin:${ZEEK_DIR}/lib/zeek/plugins/packages
 
 ENV CCACHE_DIR "/var/spool/ccache"
 
-ADD ./common/zeek_install_plugins.sh /usr/local/bin/
+COPY ./common/zeek_install_plugins.sh /usr/local/bin/
+COPY ./common/zeek_install_spicy.sh /usr/local/bin/
 
 RUN apt-get update && \
     apt-get upgrade -yq && \
@@ -57,40 +60,17 @@ RUN apt-get update && \
     mkdir -p /tmp/zeek-packages && \
     cd /tmp/zeek-packages && \
     curl -sSL --remote-name-all \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/libbroker${ZEEK_LTS}-dev_${ZEEK_VERSION}_amd64.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-core-dev_${ZEEK_VERSION}_amd64.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-core_${ZEEK_VERSION}_amd64.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-libcaf-dev_${ZEEK_VERSION}_amd64.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}_${ZEEK_VERSION}_amd64.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-btest_${ZEEK_VERSION}_amd64.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-btest-data_${ZEEK_VERSION}_amd64.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-zkg_${ZEEK_VERSION}_amd64.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeekctl${ZEEK_LTS}_${ZEEK_VERSION}_amd64.deb" && \
+        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/libbroker${ZEEK_LTS}-dev_${ZEEK_VERSION}_$TARGETARCH.deb" \
+        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-core-dev_${ZEEK_VERSION}_$TARGETARCH.deb" \
+        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-core_${ZEEK_VERSION}_$TARGETARCH.deb" \
+        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-libcaf-dev_${ZEEK_VERSION}_$TARGETARCH.deb" \
+        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}_${ZEEK_VERSION}_$TARGETARCH.deb" \
+        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-btest_${ZEEK_VERSION}_$TARGETARCH.deb" \
+        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-btest-data_${ZEEK_VERSION}_$TARGETARCH.deb" \
+        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-zkg_${ZEEK_VERSION}_$TARGETARCH.deb" \
+        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeekctl${ZEEK_LTS}_${ZEEK_VERSION}_$TARGETARCH.deb" && \
     dpkg -i ./*.deb && \
-    mkdir -p /tmp/spicy-packages && \
-    cd /tmp/spicy-packages && \
-    curl -sSL --remote-name-all \
-        "https://github.com/zeek/spicy/releases/download/v${SPICY_VERSION}/spicy_linux_debian10.deb" && \
-    dpkg -i ./*.deb && \
-	cd /tmp && \
-    mkdir -p "${CCACHE_DIR}" && \
-    zkg autoconfig --force && \
-    zkg install --force --skiptests zeek/spicy-plugin && \
-    bash /usr/local/bin/zeek_install_plugins.sh && \
-    ( find "${ZEEK_DIR}"/lib -type d -name CMakeFiles -exec rm -rf "{}" \; 2>/dev/null || true ) && \
-    ( find "${ZEEK_DIR}"/var/lib/zkg -type d -name build -exec rm -rf "{}" \; 2>/dev/null || true ) && \
-    ( find "${ZEEK_DIR}"/var/lib/zkg/clones -type d -name .git -execdir bash -c "pwd; du -sh; git pull --depth=1 --ff-only; git reflog expire --expire=all --all; git tag -l | xargs -r git tag -d; git gc --prune=all; du -sh" \; ) && \
-    rm -rf "${ZEEK_DIR}"/var/lib/zkg/scratch && \
-    ( find "${ZEEK_DIR}/" "${SPICY_DIR}/" -type f -exec file "{}" \; | grep -Pi "ELF 64-bit.*not stripped" | sed 's/:.*//' | xargs -l -r strip --strip-unneeded ) && \
-    ( find "${ZEEK_DIR}/" "${SPICY_DIR}/" -type f -exec file "{}" \; | grep -Pi "current ar archive" | sed 's/:.*//' | xargs -l -r strip --strip-unneeded ) && \
-    mkdir -p "${ZEEK_DIR}"/var/lib/zkg/clones/package/spicy-plugin/build/plugin/bin/ && \
-    ln -s -r "${ZEEK_DIR}"/lib/zeek/plugins/packages/spicy-plugin/bin/spicyz \
-        "${ZEEK_DIR}"/var/lib/zkg/clones/package/spicy-plugin/build/plugin/bin/spicyz && \
-    mkdir -p "${ZEEK_DIR}"/var/lib/zkg/clones/package/spicy-plugin/plugin/lib/ && \
-    ln -s -r "${ZEEK_DIR}"/lib/zeek/plugins/packages/spicy-plugin/lib/bif \
-        "${ZEEK_DIR}"/var/lib/zkg/clones/package/spicy-plugin/plugin/lib/bif && \
-    cd /usr/lib/locale && \
-    ( ls | grep -Piv "^(en|en_US|en_US\.utf-?8|C\.utf-?8)$" | xargs -l -r rm -rf ) && \
+    /usr/local/bin/zeek_install_spicy.sh && \
     cd /tmp && \
     apt-get clean && \
     apt-get autoremove -y && \
