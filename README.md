@@ -1,6 +1,8 @@
 # container-zeek
 
-Build for arm64 and amd64. Don't include spicy for arm64 until binaries are available for download from spicy [releases](https://github.com/zeek/spicy/releases).
+Build for arm64 and amd64. 
+
+Switch back to building from source and using the LTS version to be able to use more zkg packages.
 
 ## Build
 

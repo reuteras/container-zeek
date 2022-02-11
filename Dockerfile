@@ -1,80 +1,84 @@
-# Build zeek
-FROM ubuntu:focal
+FROM debian:bullseye as builder
 LABEL maintainer="Coding <code@ongoing.today>"
 
-ARG TARGETARCH
+ENV WD /scratch
 
-ENV DEBIAN_FRONTEND noninteractive
-# Tracking latest and not "-lts"
-ENV ZEEK_LTS="" 
-ENV ZEEK_VERSION="4.1.1-0"
-ENV SPICY_VERSION="1.3.0"
+RUN mkdir ${WD}
+WORKDIR /scratch
 
-ENV ZEEK_DIR "/opt/zeek"
-ENV SPICY_DIR "/opt/spicy"
-ENV PATH "${ZEEK_DIR}/bin:${SPICY_DIR}/bin:${ZEEK_DIR}/lib/zeek/plugins/packages/spicy-plugin/bin:${PATH}"
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get -y install --no-install-recommends \
+    bison \
+    build-essential \
+    ca-certificates \
+    cmake \
+    flex \
+    gawk \
+    git \
+    libcurl4-openssl-dev \
+    libmaxminddb-dev \
+    libncurses5-dev \
+    libpcap-dev \
+    libssl-dev \
+    python3.9-dev \
+    swig \
+    wget \
+    binutils \
+    ccache \
+    file \
+    gcc \
+    g++ \
+    google-perftools \
+    jq \
+    libfl-dev \
+    libgoogle-perftools-dev \
+    libkrb5-dev \
+    libpcap0.8-dev \
+    libssl-dev \
+    locales-all \
+    make \
+    ninja-build \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    zlib1g-dev 
 
-ENV CCACHE_DIR "/var/spool/ccache"
+ARG ZEEK_VER=4.0.5
 
-COPY ./common/zeek_install_plugins.sh /usr/local/bin/
-COPY ./common/zeek_install_spicy.sh /usr/local/bin/
+ARG BUILD_TYPE=Release
+ENV VER ${ZEEK_VER}
+ADD ./common/buildzeek ${WD}/common/buildzeek
+RUN ${WD}/common/buildzeek zeek ${VER} ${BUILD_TYPE}
+RUN apt-get -y install python3-git python3-pip python3-semantic-version python3-setuptools python3-wheel --no-install-recommends
+RUN python3 -m pip install --no-cache-dir pyzmq zkg "btest>=0.66" pre-commit
+ADD ./common/zeek_install_spicy.sh ${WD}/common/zeek_install_spicy.sh
+RUN ${WD}/common/zeek_install_spicy.sh zeek ${VER}
+ADD ./common/zeek_install_plugins.sh ${WD}/common/zeek_install_plugins.sh
+RUN ${WD}/common/zeek_install_plugins.sh zeek ${VER}
+
+# Make final image
+FROM debian:bullseye
+ARG ZEEK_VER=4.0.5
+ENV VER ${ZEEK_VER}
 
 RUN apt-get update && \
-    apt-get upgrade -yq && \
     apt-get -y install --no-install-recommends \
-        binutils \
-        bison \
-        build-essential \
-        ca-certificates \
-        ccache \
-        clang-11 \
-        cmake \
-        curl \
-        file \ 
-        flex \
-        g++ \
-        gawk \
         git \
-        gnupg2 \
-        libcurl4-openssl-dev \
-        libfl-dev \
-        libmaxminddb0 \
-        libmaxminddb-dev \
-        libncurses5-dev \
         libpcap0.8 \
-        libpcap-dev \
-        libssl-dev \
-        locales-all \
-        make \
-        ninja-build \
-        python3-dev \
-        python3-git \
-        python3-pip \
-        python3-semantic-version \
-        python3-setuptools \
-        python3-wheel \
-        swig \
-        wget \
-        zlib1g-dev && \
-    python3 -m pip install --no-cache-dir pyzmq && \
-    mkdir -p /tmp/zeek-packages && \
-    cd /tmp/zeek-packages && \
-    curl -sSL --remote-name-all \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/libbroker${ZEEK_LTS}-dev_${ZEEK_VERSION}_$TARGETARCH.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-core-dev_${ZEEK_VERSION}_$TARGETARCH.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-core_${ZEEK_VERSION}_$TARGETARCH.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-libcaf-dev_${ZEEK_VERSION}_$TARGETARCH.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}_${ZEEK_VERSION}_$TARGETARCH.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-btest_${ZEEK_VERSION}_$TARGETARCH.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-btest-data_${ZEEK_VERSION}_$TARGETARCH.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeek${ZEEK_LTS}-zkg_${ZEEK_VERSION}_$TARGETARCH.deb" \
-        "https://download.zeek.org/binary-packages/xUbuntu_20.04/$TARGETARCH/zeekctl${ZEEK_LTS}_${ZEEK_VERSION}_$TARGETARCH.deb" && \
-    dpkg -i ./*.deb && \
-    /usr/local/bin/zeek_install_spicy.sh && \
-    cd /tmp && \
-    apt-get clean && \
-    apt-get autoremove -y && \
-    apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/*/*
+        libssl1.1 \
+        libmaxminddb0 \
+        python3.9 \
+        python3-pip && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
+    python3 -m pip install --no-cache-dir btest sphinx_rtd_theme && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-CMD ["/bin/bash"]
+COPY --from=builder /usr/local/zeek-${VER} /usr/local/zeek-${VER}
+COPY --from=builder /usr/local/spicy-${VER} /usr/local/spicy-${VER}
+RUN ln -s /usr/local/zeek-${VER} /zeek
+RUN ln -s /usr/local/spicy-${VER} /spicy
+
+env PATH /zeek/bin:/spicy/bin:$PATH
+CMD /bin/bash -l
