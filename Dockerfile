@@ -80,5 +80,5 @@ RUN ${WD}/common/zeek_install_plugins.sh ${ZEEK_VER} ${SPICY_VER}
 #COPY --from=builder /usr/local/spicy-${VER} /usr/local/spicy-${VER}
 #
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-ENV PATH /usr/local/zeek-${VER}/bin:/usr/local/spicy-${VER}/bin:$PATH
+ENV PATH /usr/local/zeek-${ZEEK_VER}/bin:/usr/local/spicy-${SPICY_VER}/bin:$PATH
 CMD /bin/bash -l
