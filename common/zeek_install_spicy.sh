@@ -2,7 +2,12 @@
 
 ZEEK_VER=$1
 SPICY_VER=$2
-SPICY_BRANCH=main
+
+if [[ "${SPICY_VER}" == "main" ]]; then
+    SPICY_BRANCH=main
+else
+    SPICY_BRANCH="v${SPICY_VER}"
+fi
 
 SPICY_DIR=/usr/local/spicy-${SPICY_VER}
 ZEEK_DIR=/usr/local/${ZEEK}-${ZEEK_VER}
