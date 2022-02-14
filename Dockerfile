@@ -1,11 +1,11 @@
 FROM debian:bullseye as builder
 LABEL maintainer="Coding <code@ongoing.today>"
 
-ARG ZEEK_VER=4.0.5
-ARG SPICY_VER=main
+ARG ZEEK_VERSION=4.0.5
+ARG SPICY_VERSION=main
 ARG BUILD_TYPE=Release
-ENV ZEEK_VER ${ZEEK_VER}
-ENV SPICY_VER ${SPICY_VER}
+ENV ZEEK_VER ${ZEEK_VERSION}
+ENV SPICY_VER ${SPICY_VERSION}
 ENV WD /scratch
 
 RUN mkdir ${WD}
