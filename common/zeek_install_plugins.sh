@@ -1,12 +1,12 @@
 #!/bin/bash
 
-ZEEK=$1
-VER=$2
+ZEEK_VER=$1
+SPICY_VER=$2
 
-SPICY_DIR=/usr/local/spicy-${VER}
-ZEEK_DIR=/usr/local/${ZEEK}-${VER}
+SPICY_DIR=/usr/local/spicy-${SPICY_VER}
+ZEEK_DIR=/usr/local/${ZEEK}-${ZEEK_VER}
 
-export PATH=${ZEEK_DIR}/bin:${SPICY_DIR}:${PATH}
+export PATH=${ZEEK_DIR}/bin:${SPICY_DIR}/bin:${PATH}
 
 zkg autoconfig --force
 
@@ -27,12 +27,13 @@ ZKG_PACKAGE_NAMES=(
     "zeek-sniffpass"
     "zeek-community-id"
     "zeek/spicy-plugin"
+    "zeek/spicy-analyzers"
 )
 
 for package in "${ZKG_PACKAGE_NAMES[@]}"; do
     zkg install --force --skiptests "${package}"
 done
 
-sed -i"" -e 's/# @load packages/@load packages/' "${ZEEK_DIR}"/share/zeek/site/local.zeek
+rm -rf /usr/local/zeek-"${ZEEK_VER}"/var/lib/zkg/clones/package/*/build
 
-zeekctl deploy
+#zeekctl deploy

@@ -11,7 +11,11 @@ if [ ! -e "${ZEEK}-${VER}.tar.gz" ] ; then
 fi
 if [ ! -d "${ZEEK}-${VER}" ]; then
     tar xvzf "${ZEEK}-${VER}.tar.gz"
+    rm -f "${ZEEK}-${VER}.tar.gz"
 fi
 cd "${ZEEK}-${VER}"
 ./configure --prefix="/usr/local/${ZEEK}-${VER}" --build-type="${BUILD_TYPE}"
 make -j "$(nproc)" install
+rm -rf build
+rm -rf testing
+file /usr/local/zeek-"${VER}"/bin/* | grep stripped | cut -f1 -d: | xargs strip -s

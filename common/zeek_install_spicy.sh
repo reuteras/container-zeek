@@ -1,14 +1,21 @@
 #!/bin/bash -e
 
-ZEEK=${1}
-VER=${2}
+ZEEK_VER=$1
+SPICY_VER=$2
+SPICY_BRANCH=main
 
-SPICY_DIR=/usr/local/spicy-${VER}
-ZEEK_DIR=/usr/local/${ZEEK}-${VER}
+SPICY_DIR=/usr/local/spicy-${SPICY_VER}
+ZEEK_DIR=/usr/local/${ZEEK}-${ZEEK_VER}
 
 export PATH=$ZEEK_DIR/bin:$PATH
 
-cd /tmp
-git clone --recursive https://github.com/zeek/spicy
-cd spicy
-./configure --prefix="${SPICY_DIR}" --generator=Ninja --enable-ccache && make && make install
+mkdir -p /opt/spicy
+cd /opt/spicy
+git clone -b "${SPICY_BRANCH}" --single-branch --recursive https://github.com/zeek/spicy src
+cd src
+rm -rf .git 3rdparty/*/.git
+./configure --prefix="${SPICY_DIR}" --generator=Ninja --enable-ccache 
+make
+make install
+rm -rf build
+strip -s "${SPICY_DIR}"/lib/*

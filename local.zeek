@@ -102,7 +102,7 @@ redef digest_salt = "Please change this value.";
 # @load policy/protocols/conn/mac-logging
 
 # Uncomment this to source zkg's package state
-# @load packages
+@load packages
 
 # Output to JSON
 @load policy/tuning/json-logs.zeek
