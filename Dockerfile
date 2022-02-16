@@ -86,11 +86,10 @@ RUN apt-get update && \
         python3-semantic-version && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
     python3 -m pip install --no-cache-dir btest sphinx_rtd_theme && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/zeek-${ZEEK_VER} /usr/local/zeek-${ZEEK_VER}
 COPY --from=builder /usr/local/spicy-${SPICY_VER} /usr/local/spicy-${SPICY_VER}
-COPY --from=builder /opt /opt
 
 ENV PATH /usr/local/zeek-${ZEEK_VER}/bin:/usr/local/spicy-${SPICY_VER}/bin:$PATH
 WORKDIR /pcap
