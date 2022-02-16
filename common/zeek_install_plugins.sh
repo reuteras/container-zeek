@@ -1,10 +1,11 @@
 #!/bin/bash
+# Install zeek plugins
 
 ZEEK_VER=$1
 SPICY_VER=$2
 
 SPICY_DIR=/usr/local/spicy-${SPICY_VER}
-ZEEK_DIR=/usr/local/${ZEEK}-${ZEEK_VER}
+ZEEK_DIR=/usr/local/zeek-${ZEEK_VER}
 
 export PATH=${ZEEK_DIR}/bin:${SPICY_DIR}/bin:${PATH}
 
@@ -34,6 +35,3 @@ for package in "${ZKG_PACKAGE_NAMES[@]}"; do
     zkg install --force --skiptests "${package}"
 done
 
-rm -rf /usr/local/zeek-"${ZEEK_VER}"/var/lib/zkg/clones/package/*/build
-
-#zeekctl deploy
