@@ -66,6 +66,7 @@ ADD ./common/zeek_install_plugins.sh ${WD}/common/zeek_install_plugins.sh
 RUN ${WD}/common/zeek_install_plugins.sh ${ZEEK_VER} ${SPICY_VER}
 ADD ./common/clean.sh ${WD}/common/clean.sh
 RUN ${WD}/common/clean.sh ${ZEEK_VER} ${SPICY_VER}
+ADD ./common/local.zeek /usr/local/zeek-${ZEEK_VER}/share/zeek/site/local.zeek
 
 # Make final image
 FROM debian:bullseye

@@ -105,5 +105,5 @@ redef digest_salt = "Please change this value.";
 @load packages
 
 # Output to JSON
-@load policy/tuning/json-logs.zeek
+# @load policy/tuning/json-logs.zeek
 

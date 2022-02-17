@@ -6,8 +6,8 @@ Switch back to building from source and using the LTS version to be able to use 
 
 ## Build
 
-    docker build --tag=reuteras/container-zeek zeek
+    docker build --tag=reuteras/container-zeek .
 
 ## Run
 
-    docker run -it --rm -v "$$PWD"/pcap:/pcap:ro -v "$$PWD"/output:/output -w /output reuteras/container-zeek /bin/bash
+    docker run -it --rm -v "$PWD"/pcap:/pcap:ro -v "$PWD"/output:/output reuteras/container-zeek /bin/bash
