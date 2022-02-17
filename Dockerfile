@@ -69,7 +69,7 @@ RUN ${WD}/common/clean.sh ${ZEEK_VER} ${SPICY_VER}
 ADD ./common/local.zeek /usr/local/zeek-${ZEEK_VER}/share/zeek/site/local.zeek
 
 # Make final image
-FROM debian:bullseye
+FROM debian:bullseye-slim
 ARG ZEEK_VERSION
 ARG SPICY_VERSION
 ENV ZEEK_VER ${ZEEK_VERSION}
