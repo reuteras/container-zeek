@@ -1,5 +1,5 @@
 ARG ZEEK_VERSION=4.0.5
-ARG SPICY_VERSION=1.4.0
+ARG SPICY_VERSION=1.4.1
 ARG BUILD_TYPE=Release
 
 FROM debian:bullseye as builder
