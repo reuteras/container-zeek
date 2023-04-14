@@ -16,6 +16,7 @@ ENV PCAP /pcap
 RUN mkdir ${WD} ${PCAP}
 WORKDIR /scratch
 
+# hadolint ignore=DL3008,DL3013
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get -y install --no-install-recommends \
@@ -58,15 +59,15 @@ RUN apt-get update && \
         zlib1g-dev && \
     python3 -m pip install --no-cache-dir pyzmq zkg "btest>=0.66" pre-commit
 
-ADD ./common/buildzeek ${WD}/common/buildzeek
+COPY ./common/buildzeek ${WD}/common/buildzeek
 RUN ${WD}/common/buildzeek zeek ${ZEEK_VER} ${BUILD_TYPE}
-ADD ./common/zeek_install_spicy.sh ${WD}/common/zeek_install_spicy.sh
+COPY ./common/zeek_install_spicy.sh ${WD}/common/zeek_install_spicy.sh
 RUN ${WD}/common/zeek_install_spicy.sh ${ZEEK_VER} ${SPICY_VER}
-ADD ./common/zeek_install_plugins.sh ${WD}/common/zeek_install_plugins.sh
+COPY ./common/zeek_install_plugins.sh ${WD}/common/zeek_install_plugins.sh
 RUN ${WD}/common/zeek_install_plugins.sh ${ZEEK_VER} ${SPICY_VER}
-ADD ./common/clean.sh ${WD}/common/clean.sh
+COPY ./common/clean.sh ${WD}/common/clean.sh
 RUN ${WD}/common/clean.sh ${ZEEK_VER} ${SPICY_VER}
-ADD ./common/local.zeek /usr/local/zeek-${ZEEK_VER}/share/zeek/site/local.zeek
+COPY ./common/local.zeek /usr/local/zeek-${ZEEK_VER}/share/zeek/site/local.zeek
 
 # Make final image
 FROM debian:bullseye-slim
@@ -75,6 +76,7 @@ ARG SPICY_VERSION
 ENV ZEEK_VER ${ZEEK_VERSION}
 ENV SPICY_VER ${SPICY_VERSION}
 
+# hadolint ignore=DL3008
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get -y install --no-install-recommends \
@@ -95,4 +97,4 @@ COPY --from=builder /usr/local/spicy-${SPICY_VER} /usr/local/spicy-${SPICY_VER}
 
 ENV PATH /usr/local/zeek-${ZEEK_VER}/bin:/usr/local/spicy-${SPICY_VER}/bin:$PATH
 WORKDIR /output
-CMD /bin/bash -l
+CMD [ "/bin/bash", "-l" ]
